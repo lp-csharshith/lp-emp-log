@@ -1,0 +1,6 @@
+
+{
+  "name": "LP Performance Organization Portal",
+  "description": "Centralized daily performance logging terminal for LP members with secure database synchronization and automated overtime split logic.",
+  "requestFramePermissions": []
+}

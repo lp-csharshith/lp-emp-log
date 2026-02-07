@@ -24,17 +24,19 @@ jobs:
         with:
           python-version: '3.14'
 
-      # 🔧 Install ODBC deps so pyodbc can build wheels in Python 3.14
       - name: Install system dependencies for pyodbc
         run: |
           sudo apt-get update
-          sudo apt-get install -y unixodbc-dev g++
+          sudo apt-get install -y unixodbc unixodbc-dev g++
 
-      - name: Create and Start virtual environment and Install dependencies
+      - name: Create and start virtual environment; install dependencies
         run: |
           python -m venv antenv
           source antenv/bin/activate
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
+          # Ensure we get a wheel that works with Python 3.14
+          pip install "pyodbc>=5.3.0" --only-binary=:all:
+          # Now install your remaining dependencies
           pip install -r requirements.txt
 
       - name: Upload artifact for deployment jobs
@@ -69,3 +71,4 @@ jobs:
           slot-name: 'Production'
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0AABE99E115B4BB8B7E25F1C7472A67C }}
+

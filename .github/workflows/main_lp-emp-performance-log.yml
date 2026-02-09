@@ -10,32 +10,18 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install ODBC system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unixodbc unixodbc-dev gcc g++
-
-      - name: Create venv and install dependencies
-        run: |
-          python -m venv antenv
-          source antenv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
+      #  Deploy EVERYTHING (including dist/) to Azure
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'lp-emp-performance-log'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_761B425DA8AC4CD4BBA2AC8EC0F3A4AD }}
+          package: .
  

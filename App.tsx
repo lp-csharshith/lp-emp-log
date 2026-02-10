@@ -9,33 +9,20 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleFormSubmit = async (data: EmployeeDailyStatus) => {
-    setLoading(true);
+  const res = await fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
 
-    try {
-      const response = await fetch('/api/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
+  if (!res.ok) {
+    alert('Submission failed');
+    return;
+  }
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        alert(result.error || 'Submission failed');
-        setLoading(false);
-        return;
-      }
-
-      setSubmitted(true);
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert('Server error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setSubmitted(true);
+};
+ 
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">

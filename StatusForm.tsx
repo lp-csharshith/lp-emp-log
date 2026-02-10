@@ -56,19 +56,43 @@ const StatusForm: React.FC<Props> = ({ onSubmit }) => {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const payload: EmployeeDailyStatus = {
-      ...formData,
-      Employee_Id: Number(formData.Employee_Id),
-      Blocker_Reason:
-        hasBlockers === 'Yes' || formData.Work_Status === 'Delayed'
-          ? formData.Blocker_Reason
-          : null
-    };
-
-    onSubmit(payload);
+  const payload: EmployeeDailyStatus = {
+    Employee_Id: String(formData.Employee_Id),
+    Full_Name: formData.Full_Name,
+    Designation_Role:
+      formData.Designation_Role === 'Other'
+        ? formData.Other_Designation_Role
+        : formData.Designation_Role,
+    Department:
+      formData.Department === 'Other'
+        ? formData.Other_Department
+        : formData.Department,
+    Employment_Type: formData.Employment_Type,
+    Shift_Type: formData.Shift_Type,
+    Work_Date: formData.Work_Date,
+    Work_Status: formData.Work_Status,
+    Hours_Worked: Number(formData.Hours_Worked),
+    Overtime_Hours: Number(formData.Overtime_Hours || 0),
+    Project_Manager_Name: formData.Project_Manager_Name,
+    Leave_Type: formData.Leave_Type,
+    Task_Summary: formData.Task_Summary,
+    Blocker_Reason:
+      formData.Has_Blockers === 'Yes'
+        ? formData.Issue_Dependency_Description
+        : null,
+    Active_Projects_Count: Number(formData.Active_Projects_Count),
+    Project_Names: formData.Project_Names,
+    Task_Type:
+      formData.Task_Type === 'Other'
+        ? formData.Other_Task_Type
+        : formData.Task_Type
   };
+
+  onSubmit(payload);
+};
+ 
 
   return (
     <form onSubmit={handleSubmit} className="form-card">

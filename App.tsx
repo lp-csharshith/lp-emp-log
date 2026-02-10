@@ -7,22 +7,31 @@ import { CheckCircle2, RefreshCcw } from 'lucide-react';
 const App: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFormSubmit = async (data: EmployeeDailyStatus) => {
-  const res = await fetch('/api/submit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+    setLoading(true);
+    setError(null);
 
-  if (!res.ok) {
-    alert('Submission failed');
-    return;
-  }
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-  setSubmitted(true);
-};
- 
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(body.error || 'Submission failed');
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || 'Unexpected error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -45,6 +54,12 @@ const App: React.FC = () => {
             {loading && (
               <p className="text-center mt-6 font-bold text-slate-600">
                 Submitting… please wait
+              </p>
+            )}
+
+            {error && (
+              <p className="text-center mt-6 font-bold text-red-600">
+                {error}
               </p>
             )}
           </div>

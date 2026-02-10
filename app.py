@@ -1,179 +1,167 @@
-import os
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-import pyodbc
+import React, { useState } from 'react';
+import Header from './components/Header';
+import StatusForm from './components/StatusForm';
+import { EmployeeDailyStatus } from './types';
+import { CheckCircle2, Home } from 'lucide-react';
 
-# ======================================================
-# PATH CONFIGURATION
-# ======================================================
+const App: React.FC = () => {
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [lastSubmission, setLastSubmission] =
+    useState<EmployeeDailyStatus | null>(null);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DIST_DIR = os.path.join(BASE_DIR, "dist")
+  const handleFormSubmit = async (data: EmployeeDailyStatus) => {
+    setLoading(true);
 
-# ======================================================
-# FLASK APP CONFIG
-# ======================================================
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-app = Flask(
-    __name__,
-    static_folder=DIST_DIR,
-    static_url_path=""
-)
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Submission failed');
+        return;
+      }
 
-CORS(app)
+      const result = await res.json();
 
-# ======================================================
-# DATABASE CONFIG
-# ======================================================
+      setLastSubmission(data);
+      setSubmissionId(result.id || null);
+      setSubmitted(true);
 
-CONN_STR = os.getenv("AZURE_SQL_CONNECTIONSTRING")
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      alert('Network error while submitting');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-def get_db_connection():
-    if not CONN_STR:
-        raise RuntimeError("AZURE_SQL_CONNECTIONSTRING not set")
-    return pyodbc.connect(CONN_STR)
+  const returnToDashboard = () => {
+    setSubmitted(false);
+    setLastSubmission(null);
+    setSubmissionId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-# ======================================================
-# FRONTEND ROUTES (SERVE VITE BUILD)
-# ======================================================
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def serve_frontend(path):
-    """
-    Serve React (Vite) frontend.
-    All non-API routes return index.html.
-    """
-    full_path = os.path.join(DIST_DIR, path)
+      <main className="flex-grow py-12 md:py-20 px-4">
+        {!submitted ? (
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-12 text-center">
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase">
+                Daily Status
+              </h2>
+            </div>
 
-    if path != "" and os.path.exists(full_path):
-        return send_from_directory(DIST_DIR, path)
+            <StatusForm onSubmit={handleFormSubmit} />
 
-    return send_from_directory(DIST_DIR, "index.html")
+            {loading && (
+              <p className="mt-6 text-center font-black text-slate-500 uppercase tracking-widest text-xs">
+                Submitting… Please wait
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto mt-10">
+            <div className="bg-white rounded-[3rem] shadow-2xl border-4 border-black overflow-hidden">
+              <div className="bg-black p-16 text-center">
+                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center mx-auto mb-8 shadow-xl">
+                  <CheckCircle2 className="w-12 h-12 text-black" />
+                </div>
 
-# ======================================================
-# API ROUTES
-# ======================================================
+                <h2 className="text-4xl md:text-5xl font-black text-white uppercase mb-4">
+                  Successfully Submitted
+                </h2>
 
-@app.route("/api/check-submission", methods=["GET"])
-def check_submission():
-    employee_id = request.args.get("employee_id")
-    work_date = request.args.get("work_date")
+                <div className="h-1 w-20 bg-white/20 mx-auto rounded-full mb-4"></div>
 
-    if not employee_id or not work_date:
-        return jsonify({"exists": False}), 400
+                {submissionId && (
+                  <p className="text-white font-black opacity-70 tracking-[0.3em] text-[10px] uppercase">
+                    Log ID: {submissionId}
+                  </p>
+                )}
+              </div>
 
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT COUNT(*)
-            FROM Employee_Daily_Status
-            WHERE Employee_Id = ? AND Work_Date = ?
-            """,
-            (employee_id, work_date)
-        )
-        return jsonify({"exists": cursor.fetchone()[0] > 0})
-    finally:
-        conn.close()
+              <div className="p-8 md:p-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-sm">
+                  <div>
+                    <p className="text-slate-400 font-black uppercase tracking-widest text-[9px]">
+                      Employee
+                    </p>
+                    <p className="text-black font-black uppercase text-lg">
+                      {lastSubmission?.Full_Name}
+                    </p>
+                  </div>
 
-@app.route("/api/submit", methods=["POST"])
-def submit_log():
-    data = request.get_json(force=True)
+                  <div className="md:text-right">
+                    <p className="text-slate-400 font-black uppercase tracking-widest text-[9px]">
+                      Work Date
+                    </p>
+                    <p className="text-black font-black uppercase text-lg">
+                      {new Date(
+                        lastSubmission?.Work_Date || ''
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
 
-    required_fields = [
-        "Employee_Id",
-        "Full_Name",
-        "Work_Date",
-        "Work_Status",
-        "Task_Summary"
-    ]
+                  <div>
+                    <p className="text-slate-400 font-black uppercase tracking-widest text-[9px]">
+                      Hours Worked
+                    </p>
+                    <p className="text-black font-black uppercase text-lg">
+                      {lastSubmission?.Hours_Worked} hrs
+                    </p>
+                  </div>
 
-    for field in required_fields:
-        if not data.get(field):
-            return jsonify({"error": f"{field} is required"}), 400
+                  <div className="md:text-right">
+                    <p className="text-slate-400 font-black uppercase tracking-widest text-[9px]">
+                      Status
+                    </p>
+                    <p
+                      className={`text-lg font-black uppercase ${
+                        lastSubmission?.Work_Status === 'Delayed'
+                          ? 'text-red-600'
+                          : 'text-green-600'
+                      }`}
+                    >
+                      {lastSubmission?.Work_Status}
+                    </p>
+                  </div>
+                </div>
 
-    if len(str(data["Employee_Id"])) != 5:
-        return jsonify({"error": "Employee_Id must be exactly 5 digits"}), 400
+                <div className="pt-12 border-t-4 border-black flex justify-center">
+                  <button
+                    onClick={returnToDashboard}
+                    className="group inline-flex items-center gap-3 px-16 py-8 bg-black text-white font-black rounded-2xl uppercase tracking-[0.2em] text-sm hover:bg-slate-800 transition-all active:scale-[0.98]"
+                  >
+                    <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    New Entry
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
 
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
+      <footer className="py-12 px-4 border-t border-slate-100">
+        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-center">
+          LP PERFORMANCE ORGANIZATION • DAILY LOG TERMINAL
+        </p>
+      </footer>
+    </div>
+  );
+};
 
-        # Prevent duplicate submission
-        cursor.execute(
-            """
-            SELECT COUNT(*)
-            FROM Employee_Daily_Status
-            WHERE Employee_Id = ? AND Work_Date = ?
-            """,
-            (data["Employee_Id"], data["Work_Date"])
-        )
-        if cursor.fetchone()[0] > 0:
-            return jsonify({
-                "error": "Submission already exists for this employee and date"
-            }), 409
-
-        cursor.execute(
-            """
-            INSERT INTO Employee_Daily_Status (
-                Employee_Id,
-                Full_Name,
-                Designation_Role,
-                Department,
-                Reporting_Manager,
-                Employment_Type,
-                Shift_Type,
-                Work_Date,
-                Work_Status,
-                Hours_Worked,
-                Overtime_Hours,
-                Project_Manager_Name,
-                Leave_Type,
-                Task_Summary,
-                Blocker_Reason,
-                Active_Projects_Count,
-                Project_Names,
-                Task_Type
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                data["Employee_Id"],
-                data["Full_Name"],
-                data.get("Designation_Role"),
-                data.get("Department"),
-                data.get("Reporting_Manager"),
-                data.get("Employment_Type"),
-                data.get("Shift_Type"),
-                data["Work_Date"],
-                data["Work_Status"],
-                data.get("Hours_Worked", 0),
-                data.get("Overtime_Hours", 0),
-                data.get("Project_Manager_Name"),
-                data.get("Leave_Type"),
-                data["Task_Summary"],
-                data.get("Blocker_Reason"),
-                data.get("Active_Projects_Count", 0),
-                data.get("Project_Names"),
-                data.get("Task_Type")
-            )
-        )
-
-        conn.commit()
-        return jsonify({"message": "Log submitted successfully"}), 201
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        conn.close()
-
-# ======================================================
-# LOCAL DEV ENTRY
-# ======================================================
-
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+export default App;
+ 
  

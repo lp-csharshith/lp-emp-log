@@ -24,7 +24,6 @@ const App: React.FC = () => {
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || 'Submission failed');
-        setLoading(false);
         return;
       }
 

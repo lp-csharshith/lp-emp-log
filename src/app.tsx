@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Header from './Header';
-import StatusForm from './StatusForm';
+import Header from './components/Header';
+import StatusForm from './components/StatusForm';
 import { EmployeeDailyStatus } from './types';
 import { CheckCircle2, Home } from 'lucide-react';
 
@@ -24,7 +24,6 @@ const App: React.FC = () => {
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || 'Submission failed');
-        setLoading(false);
         return;
       }
 

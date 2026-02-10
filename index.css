@@ -443,3 +443,7 @@ button:active { transform: translateY(1px); }
 ---------------------------------------------------------- */
 :root:dir(rtl) .floating .label { left: auto; right: .9rem; }
 :root:dir(rtl) .input--with-icon { padding-right: 2.5rem; padding-left: var(--input-padding-x); background-position: right .8rem center; }
+<<<<<<< HEAD
+=======
+``
+>>>>>>> d7a370b6da8bf726cb713d01ef4e7324e4a7bb3b

@@ -4,7 +4,7 @@ import {
   User, Briefcase, Calendar, Clock, ClipboardList, AlertCircle, 
   Send, ChevronRight, Hash, Layers, Users
 } from 'lucide-react';
-import { EmployeeDailyStatus } from '../types';
+import { EmployeeDailyStatus } from './types';
 
 interface Props {
   onSubmit: (data: EmployeeDailyStatus) => void;

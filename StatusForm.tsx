@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import {
+  User, Briefcase, Calendar, Clock, ClipboardList,
+  AlertCircle, Send, ChevronRight, Hash, Layers, Users
+} from 'lucide-react';
 import { EmployeeDailyStatus } from './types';
 
 interface Props {
@@ -6,180 +10,168 @@ interface Props {
 }
 
 const StatusForm: React.FC<Props> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<EmployeeDailyStatus>({
+    Employee_Id: 0,
+    Full_Name: '',
+    Designation_Role: 'Associate Data Analyst',
+    Department: 'Data Engineering',
+    Employment_Type: 'Full-time',
+    Shift_Type: 'General',
+    Work_Date: new Date().toISOString().split('T')[0],
     Work_Status: 'On Track',
+    Hours_Worked: 0,
+    Overtime_Hours: 0,
     Leave_Type: 'None',
+    Project_Manager_Name: '',
+    Task_Summary: '',
+    Blocker_Reason: '',
+    Active_Projects_Count: 1,
+    Project_Names: '',
     Task_Type: 'Client Project'
   });
 
+  const [wordCount, setWordCount] = useState(0);
+  const [hasBlockers, setHasBlockers] = useState<'Yes' | 'No'>('No');
+
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    setFormData(prev => {
+      const updated: any = { ...prev, [name]: value };
+
+      if (name === 'Hours_Worked') {
+        const hrs = Number(value);
+        updated.Hours_Worked = hrs;
+        updated.Overtime_Hours = hrs > 9 ? +(hrs - 9).toFixed(2) : 0;
+      }
+
+      if (name === 'Task_Summary') {
+        setWordCount(value.trim().split(/\s+/).length);
+      }
+
+      return updated;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    const payload: EmployeeDailyStatus = {
+      ...formData,
+      Employee_Id: Number(formData.Employee_Id),
+      Blocker_Reason:
+        hasBlockers === 'Yes' || formData.Work_Status === 'Delayed'
+          ? formData.Blocker_Reason
+          : null
+    };
+
+    onSubmit(payload);
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-8 rounded-2xl shadow space-y-5"
-    >
-      {/* Employee Info */}
-      <input
-        name="Employee_Id"
-        type="number"
-        placeholder="Employee ID"
-        className="input"
-        required
-        onChange={handleChange}
-      />
+    <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[2rem] shadow-2xl border-2 border-black space-y-10">
 
-      <input
-        name="Full_Name"
-        type="text"
-        placeholder="Full Name"
-        className="input"
-        required
-        onChange={handleChange}
-      />
+      {/* Employee */}
+      <section>
+        <h3 className="font-black mb-4 flex gap-2 items-center">
+          <User /> Employee Details
+        </h3>
 
-      {/* Dropdowns */}
-      <select name="Designation_Role" className="input" onChange={handleChange}>
-        {[
-          'Associate Data Analyst',
-          'Associate Data Engineer',
-          'Data Engineer',
-          'Data Analyst',
-          'Data Scientist',
-          'Manager Data Science',
-          'Data Engineer Lead',
-          'Data Analyst Lead',
-          'Associate Data Scientist',
-          'Data Scientist Lead',
-          'HR Generalist',
-          'Senior HR Generalist'
-        ].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
+        <input
+          name="Employee_Id"
+          type="number"
+          placeholder="Employee ID (5 digits)"
+          required
+          className="input"
+          onChange={handleChange}
+        />
 
-      <select name="Department" className="input" onChange={handleChange}>
-        {['Data Engineering', 'Data Analytics', 'Data Science', 'HR'].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
+        <input
+          name="Full_Name"
+          placeholder="Full Name"
+          required
+          className="input"
+          onChange={handleChange}
+        />
+      </section>
 
-      <select name="Employment_Type" className="input" onChange={handleChange}>
-        {['Full-time', 'Part-time', 'Contract', 'Internship'].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
+      {/* Work */}
+      <section>
+        <h3 className="font-black mb-4 flex gap-2 items-center">
+          <Clock /> Work Info
+        </h3>
 
-      <select name="Shift_Type" className="input" onChange={handleChange}>
-        {['General', 'Night', 'Rotational'].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
+        <input
+          type="date"
+          name="Work_Date"
+          value={formData.Work_Date}
+          className="input"
+          onChange={handleChange}
+        />
 
-      <input
-        name="Work_Date"
-        type="date"
-        className="input"
-        required
-        onChange={handleChange}
-      />
+        <input
+          type="number"
+          name="Hours_Worked"
+          step="0.1"
+          className="input"
+          onChange={handleChange}
+        />
 
-      <select name="Work_Status" className="input" onChange={handleChange}>
-        {['On Track', 'Delayed'].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
+        <select name="Work_Status" className="input" onChange={handleChange}>
+          <option>On Track</option>
+          <option>Delayed</option>
+        </select>
 
-      <input
-        name="Hours_Worked"
-        type="number"
-        step="0.25"
-        placeholder="Hours Worked"
-        className="input"
-        onChange={handleChange}
-      />
+        {formData.Work_Status === 'Delayed' && (
+          <textarea
+            name="Blocker_Reason"
+            placeholder="Reason for delay"
+            className="input"
+            onChange={handleChange}
+          />
+        )}
+      </section>
 
-      <input
-        name="Overtime_Hours"
-        type="number"
-        step="0.25"
-        placeholder="Overtime Hours"
-        className="input"
-        onChange={handleChange}
-      />
+      {/* Task */}
+      <section>
+        <h3 className="font-black mb-4 flex gap-2 items-center">
+          <ClipboardList /> Task
+        </h3>
 
-      <input
-        name="Project_Manager_Name"
-        type="text"
-        placeholder="Project Manager Name"
-        className="input"
-        onChange={handleChange}
-      />
+        <textarea
+          name="Task_Summary"
+          placeholder="Task Summary"
+          className="input"
+          onChange={handleChange}
+        />
 
-      <select name="Leave_Type" className="input" onChange={handleChange}>
-        {['None', 'Sick Leave', 'Casual Leave', 'Paid Leave', 'Unpaid Leave'].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
+        <select
+          value={hasBlockers}
+          onChange={e => setHasBlockers(e.target.value as 'Yes' | 'No')}
+          className="input"
+        >
+          <option>No</option>
+          <option>Yes</option>
+        </select>
 
-      <textarea
-        name="Task_Summary"
-        placeholder="Task Summary"
-        className="input h-24"
-        onChange={handleChange}
-      />
+        {hasBlockers === 'Yes' && (
+          <textarea
+            name="Blocker_Reason"
+            placeholder="Describe blockers"
+            className="input"
+            onChange={handleChange}
+          />
+        )}
+      </section>
 
-      <textarea
-        name="Blocker_Reason"
-        placeholder="Blocker Reason (if any)"
-        className="input h-20"
-        onChange={handleChange}
-      />
-
-      <input
-        name="Active_Projects_Count"
-        type="number"
-        placeholder="Active Projects Count"
-        className="input"
-        onChange={handleChange}
-      />
-
-      <input
-        name="Project_Names"
-        type="text"
-        placeholder="Project Names (comma separated)"
-        className="input"
-        onChange={handleChange}
-      />
-
-      <select name="Task_Type" className="input" onChange={handleChange}>
-        {['Client Project', 'Internal Task', 'Training', 'Innovation'].map(v => (
-          <option key={v} value={v}>{v}</option>
-        ))}
-      </select>
-
-      <button
-        type="submit"
-        className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition"
-      >
-        Submit
+      <button type="submit" className="w-full bg-black text-white py-5 rounded-2xl font-black">
+        <Send /> Submit Status
       </button>
     </form>
   );
 };
 
 export default StatusForm;
-
  

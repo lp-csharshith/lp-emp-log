@@ -71,106 +71,103 @@ const StatusForm: React.FC<Props> = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[2rem] shadow-2xl border-2 border-black space-y-10">
+    <form onSubmit={handleSubmit} className="form-card">
 
-      {/* Employee */}
-      <section>
-        <h3 className="font-black mb-4 flex gap-2 items-center">
-          <User /> Employee Details
-        </h3>
+  {/* EMPLOYEE IDENTIFICATION */}
+  <div className="form-section">
+    <h3>Employee Identification</h3>
 
-        <input
-          name="Employee_Id"
-          type="number"
-          placeholder="Employee ID (5 digits)"
-          required
-          className="input"
-          onChange={handleChange}
-        />
+    <label className="form-label">Employee ID *</label>
+    <input name="Employee_Id" className="input" required onChange={handleChange} />
 
-        <input
-          name="Full_Name"
-          placeholder="Full Name"
-          required
-          className="input"
-          onChange={handleChange}
-        />
-      </section>
+    <label className="form-label">Full Name *</label>
+    <input name="Full_Name" className="input" required onChange={handleChange} />
 
-      {/* Work */}
-      <section>
-        <h3 className="font-black mb-4 flex gap-2 items-center">
-          <Clock /> Work Info
-        </h3>
-
-        <input
-          type="date"
-          name="Work_Date"
-          value={formData.Work_Date}
-          className="input"
-          onChange={handleChange}
-        />
-
-        <input
-          type="number"
-          name="Hours_Worked"
-          step="0.1"
-          className="input"
-          onChange={handleChange}
-        />
-
-        <select name="Work_Status" className="input" onChange={handleChange}>
-          <option>On Track</option>
-          <option>Delayed</option>
+    <div className="form-grid-2">
+      <div>
+        <label className="form-label">Role & Designation *</label>
+        <select name="Designation_Role" className="input" onChange={handleChange}>
+          <option>Associate Data Analyst</option>
+          <option>Data Engineer</option>
         </select>
+      </div>
 
-        {formData.Work_Status === 'Delayed' && (
-          <textarea
-            name="Blocker_Reason"
-            placeholder="Reason for delay"
-            className="input"
-            onChange={handleChange}
-          />
-        )}
-      </section>
-
-      {/* Task */}
-      <section>
-        <h3 className="font-black mb-4 flex gap-2 items-center">
-          <ClipboardList /> Task
-        </h3>
-
-        <textarea
-          name="Task_Summary"
-          placeholder="Task Summary"
-          className="input"
-          onChange={handleChange}
-        />
-
-        <select
-          value={hasBlockers}
-          onChange={e => setHasBlockers(e.target.value as 'Yes' | 'No')}
-          className="input"
-        >
-          <option>No</option>
-          <option>Yes</option>
+      <div>
+        <label className="form-label">Department *</label>
+        <select name="Department" className="input" onChange={handleChange}>
+          <option>Data Engineering</option>
+          <option>Data Science</option>
         </select>
+      </div>
+    </div>
+  </div>
 
-        {hasBlockers === 'Yes' && (
-          <textarea
-            name="Blocker_Reason"
-            placeholder="Describe blockers"
-            className="input"
-            onChange={handleChange}
-          />
-        )}
-      </section>
+  {/* WORK SCHEDULE */}
+  <div className="form-section">
+    <h3>Work Schedule</h3>
 
-      <button type="submit" className="w-full bg-black text-white py-5 rounded-2xl font-black">
-        <Send /> Submit Status
-      </button>
-    </form>
-  );
+    <div className="form-grid-2">
+      <div>
+        <label className="form-label">Employment Type *</label>
+        <select name="Employment_Type" className="input" onChange={handleChange}>
+          <option>Full-time</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="form-label">Shift *</label>
+        <select name="Shift_Type" className="input" onChange={handleChange}>
+          <option>General</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  {/* PERFORMANCE */}
+  <div className="form-section">
+    <h3>Performance Tracking</h3>
+
+    <div className="form-grid-2">
+      <div>
+        <label className="form-label">Work Date *</label>
+        <input type="date" name="Work_Date" className="input" onChange={handleChange} />
+      </div>
+
+      <div>
+        <label className="form-label">Hours Worked *</label>
+        <input type="number" name="Hours_Worked" className="input" onChange={handleChange} />
+      </div>
+    </div>
+
+    <label className="form-label">Daily Work Status *</label>
+    <select name="Work_Status" className="input" onChange={handleChange}>
+      <option>On Track</option>
+      <option>Delayed</option>
+    </select>
+  </div>
+
+  {/* TASK */}
+  <div className="form-section">
+    <h3>Activity Details</h3>
+
+    <label className="form-label">Task Summary *</label>
+    <textarea name="Task_Summary" className="input" onChange={handleChange} />
+
+    <label className="form-label">Any Blockers?</label>
+    <select name="Has_Blockers" className="input" onChange={handleChange}>
+      <option>No</option>
+      <option>Yes</option>
+    </select>
+  </div>
+
+  <button
+    type="submit"
+    className="w-full mt-4 py-4 bg-black text-white font-black rounded-2xl"
+  >
+    FINALIZE & SUBMIT STATUS
+  </button>
+</form>
+);
 };
 
 export default StatusForm;
